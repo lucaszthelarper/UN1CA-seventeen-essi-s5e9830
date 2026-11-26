@@ -138,6 +138,28 @@ elif [[ "$SOURCE_PLATFORM_SDK_VERSION" -eq 36 ]]; then
     HEX_PATCH "$WORK_DIR/system/system/lib64/libstagefright.so" \
         "e10740b9e22340b9e00313aa44aa059420020034fa03002a" \
         "e10740b9e22340b9e00313aa44aa059411000014fa03002a"
+elif xxd -p -c 0 "$WORK_DIR/system/system/lib64/libstagefright.so" | \
+    grep -Eq '48008052e8af00b9f3fbfff0736a0e9182fbfff042183791|ccfdff17e8af00b9cafdff17736a0e91a2035eb85f084071'; then
+    # The updated S947B donor moved strings and PLT entries, but retained
+    # the instruction addresses. Keep its matched media stack and use the
+    # same encoder-input, SVC and guarded HEVC profile bridge fixes.
+    STAGEFRIGHT_PATCHES="
+140340f9e00315aa810240f91d2b0294e1f4ff9021783f91e00314aa2200805206310294|140340f9e00315aa810240f91d2b0294e1f4ff9021783f91e00314aa0200805206310294
+e10f40b9e28b40b9e00313aa35f7059400020034fa03002a|e10f40b9e28b40b9e00313aa35f7059410000014fa03002a
+48008052e8af00b9f3fbfff0736a0e9182fbfff042183791c0008052e10313aaa0f20594e0fbffb0|ccfdff17e8af00b9cafdff17736a0e91a2035eb85f0840716100005402008252a2031eb87a110014
+a2035eb8e30340b9e00313aa21008052|82eeff17e30340b9e00313aa21008052
+"
+    while IFS='|' read -r STAGEFRIGHT_FROM STAGEFRIGHT_TO; do
+        [ "$STAGEFRIGHT_FROM" ] || continue
+        if xxd -p -c 0 "$WORK_DIR/system/system/lib64/libstagefright.so" | grep -q "$STAGEFRIGHT_FROM"; then
+            HEX_PATCH "$WORK_DIR/system/system/lib64/libstagefright.so" \
+                "$STAGEFRIGHT_FROM" "$STAGEFRIGHT_TO" || exit 1
+        elif ! xxd -p -c 0 "$WORK_DIR/system/system/lib64/libstagefright.so" | grep -q "$STAGEFRIGHT_TO"; then
+            ABORT "Missing updated Android 17 Stagefright compatibility pattern"
+            exit 1
+        fi
+    done <<< "$STAGEFRIGHT_PATCHES"
+    unset STAGEFRIGHT_PATCHES STAGEFRIGHT_FROM STAGEFRIGHT_TO
 else
     # Android 17 moved both call sites while preserving their semantics.
     # MediaCodecSource::suspendRecording(bool) remains a no-op, so start the
