@@ -31,29 +31,12 @@ system/lib64/libssu_keystore2.so
 system/priv-app/SsuService
 "
 
-# Recovery restoration script
-VENDOR_DEBLOAT+="
-recovery-from-boot.p
-bin/install-recovery.sh
-etc/init/vendor_flash_recovery.rc
-"
-
 # PDP apps
 SYSTEM_DEBLOAT+="
 system/preload
 "
 
 truncate -s 0 "$WORK_DIR/system/system/etc/vpl_apks_count_list.txt"
-
-# eSIM
-[[ "$TARGET_COMMON_SUPPORT_EMBEDDED_SIM" == "false" ]] && SYSTEM_DEBLOAT+="
-system/etc/permissions/privapp-permissions-com.samsung.android.app.esimkeystring.xml
-system/etc/permissions/privapp-permissions-com.samsung.euicc.xml
-system/etc/sysconfig/preinstalled-packages-com.samsung.android.app.esimkeystring.xml
-system/etc/sysconfig/preinstalled-packages-com.samsung.euicc.xml
-system/priv-app/EsimKeyString
-system/priv-app/EuiccService
-"
 
 # SmartFPSAdjuster
 [ "$TARGET_LCD_CONFIG_HFR_MODE" -lt "1" ] && SYSTEM_DEBLOAT+="
@@ -80,20 +63,6 @@ PRODUCT_DEBLOAT+="
 app/DuoStub
 "
 
-# HwModuleTest
-SYSTEM_DEBLOAT+="
-system/app/Cameralyzer
-system/app/FactoryAirCommandManager
-system/app/FactoryCameraFB
-system/app/HMT
-system/app/WlanTest
-system/etc/default-permissions/default-permissions-com.sec.factory.cameralyzer.xml
-system/etc/permissions/privapp-permissions-com.samsung.android.providers.factory.xml
-system/etc/permissions/privapp-permissions-com.sec.facatfunction.xml
-system/priv-app/FacAtFunction
-system/priv-app/FactoryTestProvider
-"
-
 # Language packs
 SYSTEM_DEBLOAT+="$(find "$WORK_DIR/system" -type d -name "*TTSVoice*" | sed "s|$WORK_DIR/system/||g")"
 
@@ -101,22 +70,6 @@ SYSTEM_DEBLOAT+="$(find "$WORK_DIR/system" -type d -name "*TTSVoice*" | sed "s|$
 SYSTEM_DEBLOAT+="
 system/etc/permissions/signature-permissions-com.sec.android.app.kidshome.xml
 system/app/KidsHome_Installer
-"
-
-# Bixby
-SYSTEM_DEBLOAT+="
-system/priv-app/Bixby
-system/app/BixbyWakeup
-system/etc/preferred-apps/com.samsung.android.bixby.agent.xml
-system/etc/permissions/privapp-permissions-com.samsung.android.bixby.agent.xml
-system/etc/permissions/privapp-permissions-com.samsung.android.bixby.wakeup.xml
-system/etc/permissions/signature-permissions-com.samsung.android.bixby.agent.xml
-"
-
-# LED Cover Service
-[ "$(GET_FLOATING_FEATURE_CONFIG "SEC_FLOATING_FEATURE_FRAMEWORK_CONFIG_NFC_LED_COVER_LEVEL")" -lt "30" ] && SYSTEM_DEBLOAT+="
-system/etc/permissions/privapp-permissions-com.sec.android.cover.ledcover.xml
-system/priv-app/LedCoverService
 "
 
 # Link to Windows
@@ -163,16 +116,6 @@ system/priv-app/SOAgent76
 
 SET_FLOATING_FEATURE_CONFIG "SEC_FLOATING_FEATURE_CONTEXTSERVICE_ENABLE_SURVEY_MODE" --delete
 
-# Samsung AR Emoji
-SYSTEM_DEBLOAT+="
-system/etc/default-permissions/default-permissions-com.sec.android.mimage.avatarstickers.xml
-system/etc/permissions/privapp-permissions-com.samsung.android.aremojieditor.xml
-system/etc/permissions/privapp-permissions-com.sec.android.mimage.avatarstickers.xml
-system/etc/permissions/signature-permissions-com.sec.android.mimage.avatarstickers.xml
-system/priv-app/AREmojiEditor
-system/priv-app/AvatarEmojiSticker
-"
-
 # Samsung Free
 SYSTEM_DEBLOAT+="
 system/app/MinusOnePage
@@ -182,11 +125,6 @@ system/app/MinusOnePage
 SYSTEM_DEBLOAT+="
 system/etc/permissions/signature-permissions-com.samsung.android.offline.languagemodel.xml
 system/priv-app/OfflineLanguageModel_stub
-"
-
-# Google Messages
-PRODUCT_DEBLOAT+="
-product/priv-app/Messages
 "
 
 # Samsung Pass
