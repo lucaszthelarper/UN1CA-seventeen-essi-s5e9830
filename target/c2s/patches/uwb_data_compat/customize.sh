@@ -15,8 +15,8 @@ if [ ! -f "$WORK_DIR/vendor/etc/permissions/android.hardware.uwb.xml" ]; then
     return 0
 fi
 
-# Samsung's Android 16 framework stores its database and SCPM data in
-# /data/uwb. The Android 11 c2s vendor labels that directory as uwb_data_file,
+# Samsung's Android 17 framework stores its database and SCPM data in /data/uwb.
+# The Android 13 c2s vendor labels that directory as uwb_data_file,
 # but only granted access to the old platform_app implementation. The current
 # implementation runs inside system_server, so grant the same data access to
 # the versioned system_server domain exposed to this vendor policy.
@@ -26,23 +26,23 @@ if [ ! -f "$WORK_DIR/vendor/$VENDOR_POLICY" ]; then
 fi
 
 if ! grep -q -F '(type uwb_data_file)' "$WORK_DIR/vendor/$VENDOR_POLICY" || \
-        ! grep -q -F '(typeattributeset system_server_30_0 (system_server))' \
-            "$WORK_DIR/system/system/etc/selinux/mapping/30.0.cil"; then
+        ! grep -q -F '(typeattributeset system_server_33_0 (system_server))' \
+            "$WORK_DIR/system/system/etc/selinux/mapping/33.0.cil"; then
     LOGE "Required c2s UWB SELinux types are not available"
     return 1
 fi
 
 LOG "- Granting system_server access to the legacy c2s UWB data domain"
-if ! grep -q -F '(allow system_server_30_0 uwb_data_file (dir ' \
+if ! grep -q -F '(allow system_server_33_0 uwb_data_file (dir ' \
         "$WORK_DIR/vendor/$VENDOR_POLICY"; then
     printf '%s\n' \
-        '(allow system_server_30_0 uwb_data_file (dir (ioctl read write create getattr setattr lock rename open watch watch_reads add_name remove_name reparent search rmdir)))' \
+        '(allow system_server_33_0 uwb_data_file (dir (ioctl read write create getattr setattr lock rename open watch watch_reads add_name remove_name reparent search rmdir)))' \
         >> "$WORK_DIR/vendor/$VENDOR_POLICY"
 fi
-if ! grep -q -F '(allow system_server_30_0 uwb_data_file (file ' \
+if ! grep -q -F '(allow system_server_33_0 uwb_data_file (file ' \
         "$WORK_DIR/vendor/$VENDOR_POLICY"; then
     printf '%s\n' \
-        '(allow system_server_30_0 uwb_data_file (file (ioctl read write create getattr setattr lock append map unlink rename open watch watch_reads)))' \
+        '(allow system_server_33_0 uwb_data_file (file (ioctl read write create getattr setattr lock append map unlink rename open watch watch_reads)))' \
         >> "$WORK_DIR/vendor/$VENDOR_POLICY"
 fi
 
