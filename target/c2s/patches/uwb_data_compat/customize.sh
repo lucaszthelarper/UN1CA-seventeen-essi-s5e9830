@@ -46,9 +46,9 @@ if ! grep -q -F '(allow system_server_33_0 uwb_data_file (file ' \
         >> "$WORK_DIR/vendor/$VENDOR_POLICY"
 fi
 
-# Both the c2s and current Samsung init scripts refer to /system/etc/uwb_key,
-# although the firmware actually ships the key in /vendor/etc. Keep the
-# framework-owned /data/uwb layout and source the key from its real location.
+# Both the c2s and older Samsung init scripts refer to /system/etc/uwb_key,
+# whereas newer source firmwares (S26+) omit or alter the copy line. Ensure
+# /vendor/etc/uwb_key is copied to /data/uwb/Key with proper permissions.
 if [ ! -f "$WORK_DIR/system/$UWB_INIT" ]; then
     LOGE "File not found: /system/$UWB_INIT"
     return 1
@@ -59,14 +59,20 @@ if [ ! -f "$WORK_DIR/vendor/etc/uwb_key" ]; then
     return 1
 fi
 
-if grep -q -F 'copy /system/etc/uwb_key /data/uwb/Key' \
+LOG "- Configuring the c2s UWB key source"
+if grep -q -E '^[[:space:]]*copy[[:space:]]+[^[:space:]]*uwb_key[[:space:]]+/data/uwb/Key' \
         "$WORK_DIR/system/$UWB_INIT"; then
-    LOG "- Correcting the c2s UWB key source"
-    sed -i 's|copy /system/etc/uwb_key /data/uwb/Key|copy /vendor/etc/uwb_key /data/uwb/Key|' \
+    sed -i -E 's|^([[:space:]]*copy[[:space:]]+)[^[:space:]]*uwb_key([[:space:]]+/data/uwb/Key)|\1/vendor/etc/uwb_key\2|' \
         "$WORK_DIR/system/$UWB_INIT"
+elif grep -q -E 'mkdir[[:space:]]+/data/uwb/?' "$WORK_DIR/system/$UWB_INIT"; then
+    sed -i -E '/mkdir[[:space:]]+\/data\/uwb\/?/a\    copy /vendor/etc/uwb_key /data/uwb/Key\n    chown system system /data/uwb/Key\n    chmod 0660 /data/uwb/Key' \
+        "$WORK_DIR/system/$UWB_INIT"
+else
+    printf '\non post-fs-data\n    mkdir /data/uwb/ 775 system system encryption=None\n    copy /vendor/etc/uwb_key /data/uwb/Key\n    chown system system /data/uwb/Key\n    chmod 0660 /data/uwb/Key\n' \
+        >> "$WORK_DIR/system/$UWB_INIT"
 fi
 
-if ! grep -q -F 'copy /vendor/etc/uwb_key /data/uwb/Key' \
+if ! grep -q -E 'copy[[:space:]]+/vendor/etc/uwb_key[[:space:]]+/data/uwb/Key' \
         "$WORK_DIR/system/$UWB_INIT"; then
     LOGE "Could not configure the c2s UWB key source"
     return 1
@@ -74,7 +80,7 @@ fi
 
 if ! grep -q -F 'restorecon_recursive /data/uwb' \
         "$WORK_DIR/system/$UWB_INIT"; then
-    sed -i '/mkdir \/data\/uwb\/ 775 system system encryption=None/a\    restorecon_recursive /data/uwb' \
+    sed -i -E '/mkdir[[:space:]]+\/data\/uwb\/?/a\    restorecon_recursive /data/uwb' \
         "$WORK_DIR/system/$UWB_INIT"
 fi
 
