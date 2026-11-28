@@ -1,6 +1,4 @@
 id=wallpaper
-name=Original device wallpapers
-version=1.2
-versionCode=3
-author=salvogiangri
-description=Restores the target stock wallpaper catalogue and assets.
+name=Galaxy wallpapers
+author=salvogiangri, GoRhanHee
+description=Adds Galaxy S26 Ultra wallpapers on Android 17 and Galaxy S25 wallpapers on older bases, with 60fps motion.
